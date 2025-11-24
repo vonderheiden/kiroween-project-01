@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>My To-Do List</h1>
+            
+            <!-- Add Task Form -->
+            <div class="add-task-container">
+                <input 
+                    type="text" 
+                    id="taskInput" 
+                    placeholder="Enter a new task..."
+                    autocomplete="off"
+                >
+                <button id="addTaskBtn">Add Task</button>
+            </div>
+
+            <!-- Task List -->
+            <ul id="taskList" class="task-list"></ul>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <h2>Edit Task</h2>
+            <input 
+                type="text" 
+                id="editInput" 
+                placeholder="Edit task..."
+                autocomplete="off"
+            >
+            <div class="modal-buttons">
+                <button id="saveEditBtn" class="btn-save">Save</button>
+                <button id="cancelEditBtn" class="btn-cancel">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
