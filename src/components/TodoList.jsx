@@ -57,11 +57,18 @@ export default function TodoList({ user }) {
     if (!newTask.trim()) return
 
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('tasks')
-        .insert([{ text: newTask.trim(), user_id: user.id }])
+        .insert([{ text: newTask.trim(), user_id: user.id, completed: false }])
+        .select()
 
       if (error) throw error
+      
+      // Immediately add to local state
+      if (data && data.length > 0) {
+        setTasks(prev => [data[0], ...prev])
+      }
+      
       setNewTask('')
     } catch (error) {
       console.error('Error adding task:', error)
@@ -69,6 +76,11 @@ export default function TodoList({ user }) {
   }
 
   const toggleTask = async (id, completed) => {
+    // Optimistically update UI
+    setTasks(prev => prev.map(task => 
+      task.id === id ? { ...task, completed: !completed } : task
+    ))
+
     try {
       const { error } = await supabase
         .from('tasks')
@@ -78,10 +90,18 @@ export default function TodoList({ user }) {
       if (error) throw error
     } catch (error) {
       console.error('Error toggling task:', error)
+      // Revert on error
+      setTasks(prev => prev.map(task => 
+        task.id === id ? { ...task, completed: completed } : task
+      ))
     }
   }
 
   const deleteTask = async (id) => {
+    // Optimistically update UI
+    const taskToDelete = tasks.find(task => task.id === id)
+    setTasks(prev => prev.filter(task => task.id !== id))
+
     try {
       const { error } = await supabase
         .from('tasks')
@@ -91,6 +111,10 @@ export default function TodoList({ user }) {
       if (error) throw error
     } catch (error) {
       console.error('Error deleting task:', error)
+      // Revert on error
+      if (taskToDelete) {
+        setTasks(prev => [...prev, taskToDelete])
+      }
     }
   }
 
@@ -102,6 +126,15 @@ export default function TodoList({ user }) {
   const saveEdit = async () => {
     if (!editText.trim()) return
 
+    const oldText = tasks.find(task => task.id === editingId)?.text
+    
+    // Optimistically update UI
+    setTasks(prev => prev.map(task => 
+      task.id === editingId ? { ...task, text: editText.trim() } : task
+    ))
+    setEditingId(null)
+    setEditText('')
+
     try {
       const { error } = await supabase
         .from('tasks')
@@ -109,10 +142,14 @@ export default function TodoList({ user }) {
         .eq('id', editingId)
 
       if (error) throw error
-      setEditingId(null)
-      setEditText('')
     } catch (error) {
       console.error('Error updating task:', error)
+      // Revert on error
+      if (oldText) {
+        setTasks(prev => prev.map(task => 
+          task.id === editingId ? { ...task, text: oldText } : task
+        ))
+      }
     }
   }
 
